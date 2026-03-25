@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * The core business logic service for handling client billing.
  * Annotated with @Service (a specialization of @Component) to indicate
@@ -67,5 +69,41 @@ public class BillingService {
         int rowsAffected = jdbcTemplate.update(sql, clientName, amount, status);
 
         System.out.println("💾 [DATABASE] " + rowsAffected + " record(s) saved to the database successfully.");
+    }
+
+    /**
+     * Audits the database by fetching and printing all saved billing records.
+     * Demonstrates the power of Spring's JdbcTemplate and functional RowMappers
+     * to completely eliminate raw ResultSet iteration and exception handling boilerplate.
+     */
+    public void printAllInvoices() {
+        System.out.println("\n🗄️ [DATABASE] Fetching all billing records for audit...");
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        String sql = "SELECT id, client_name, amount, status, created_at FROM billing_records";
+
+        // The RowMapper is a functional interface. Spring runs the query, loops through the ResultSet
+        // automatically, and passes each row (rs) into this lambda expression for you to map!
+        List<String> records = jdbcTemplate.query(sql, (rs, rowNum) -> {
+            // We map the raw database row into a clean, formatted Java String
+            return String.format("Invoice #%d | Client: %-18s | Amount: $%7.2f | Status: %s | Date: %s",
+                    rs.getInt("id"),
+                    rs.getString("client_name"),
+                    rs.getDouble("amount"),
+                    rs.getString("status"),
+                    rs.getTimestamp("created_at").toString());
+        });
+
+        if (records.isEmpty()) {
+            System.out.println("  -> No records found in the database.");
+        } else {
+            // Using the Stream API / Iterable.forEach to print the results
+            records.forEach(record -> System.out.println("  -> " + record));
+        }
+        System.out.println("--------------------------------------------------\n");
     }
 }

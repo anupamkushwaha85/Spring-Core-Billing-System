@@ -19,7 +19,7 @@ public class Main {
         }
 
 
-        // 1. Initialize the Container using our AppConfig blueprint
+        // Initialize the Container using our AppConfig blueprint
         // This triggers component scanning, property loading, and bean creation.
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
 
@@ -30,11 +30,11 @@ public class Main {
             throw new RuntimeException(e);
         }
 
-        // 2. Fetch the fully wired BillingService from the container
+        //  Fetch the fully wired BillingService from the container
         BillingService billingService = context.getBean(BillingService.class);
         NotificationService notificationService = context.getBean(NotificationService.class);
 
-        // 3. Run the application logic
+        //  Run the application logic
         System.out.println("\n--- 🏢 CLIENT 1: Wayne Enterprises (Default Behavior) ---");
         // This will use the default Email sender we wired in the Setter
         billingService.billClient("Wayne Enterprises", 25000.50);
@@ -54,7 +54,12 @@ public class Main {
         // This will now magically use SMS instead of Email!
         billingService.billClient("Stark Industries", 999.99);
 
-        // 4. Gracefully shut down the container
+
+        System.out.println("\n--- 📊 SYSTEM AUDIT: FINAL DATABASE STATE ---");
+        billingService.printAllInvoices();
+
+
+        //  Gracefully shut down the container
         // This ensures things like our HikariCP database pool close their connections cleanly.
         System.out.println("\n🛑 Shutting down container...");
         context.close();
