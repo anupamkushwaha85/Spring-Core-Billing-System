@@ -1,7 +1,9 @@
 package com.billing;
 
 import com.billing.config.AppConfig;
+import com.billing.processor.NotificationSender;
 import com.billing.service.BillingService;
+import com.billing.service.NotificationService;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
@@ -30,9 +32,27 @@ public class Main {
 
         // 2. Fetch the fully wired BillingService from the container
         BillingService billingService = context.getBean(BillingService.class);
+        NotificationService notificationService = context.getBean(NotificationService.class);
 
         // 3. Run the application logic
+        System.out.println("\n--- 🏢 CLIENT 1: Wayne Enterprises (Default Behavior) ---");
+        // This will use the default Email sender we wired in the Setter
         billingService.billClient("Wayne Enterprises", 25000.50);
+
+
+        System.out.println("\n--- 🔄 DYNAMIC SYSTEM OVERRIDE ---");
+        System.out.println("Admin changes system settings to SMS temporarily without restarting server...");
+
+        // We fetch the SMS bean from the container...
+        NotificationSender smsSender = (NotificationSender) context.getBean("smsSender");
+
+        // ...and we inject it into our Singleton service while the app is still running!
+        notificationService.setNotificationSender(smsSender);
+
+
+        System.out.println("\n--- 🏢 CLIENT 2: Stark Industries (Modified Behavior) ---");
+        // This will now magically use SMS instead of Email!
+        billingService.billClient("Stark Industries", 999.99);
 
         // 4. Gracefully shut down the container
         // This ensures things like our HikariCP database pool close their connections cleanly.

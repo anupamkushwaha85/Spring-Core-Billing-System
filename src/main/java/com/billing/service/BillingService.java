@@ -16,6 +16,7 @@ public class BillingService {
     // The dependency is marked 'final' to ensure immutability.
     // Once this service is created, its payment processor cannot be swapped out mid-flight.
     private final PaymentProcessor paymentProcessor;
+    private final NotificationService notificationService;
 
     /**
      * Constructor Injection for mandatory dependencies.
@@ -24,9 +25,11 @@ public class BillingService {
      * preventing a NoUniqueBeanDefinitionException.
      */
     @Autowired // Note: In modern Spring (4.3+), @Autowired is optional if there's only one constructor, but it's good for clarity.
-    public BillingService(@Qualifier("mockStripe") PaymentProcessor paymentProcessor) {
+    public BillingService(@Qualifier("mockStripe") PaymentProcessor paymentProcessor,
+                          NotificationService notificationService) {
         System.out.println("🔧 [CONTAINER] Injecting PaymentProcessor into BillingService via Constructor...");
         this.paymentProcessor = paymentProcessor;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -44,6 +47,7 @@ public class BillingService {
 
         if (isSuccess) {
             System.out.println("🧾 [BILLING SERVICE] Invoice marked as PAID and closed.");
+            notificationService.notifyClient(clientName, amount);
         } else {
             System.out.println("❌ [BILLING SERVICE] Payment failed. Initiating retry protocol.");
         }
